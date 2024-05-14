@@ -14,9 +14,7 @@ permissions:
 
 jobs:
   test_ubuntu:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.10
@@ -29,3 +27,20 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Test with shell
       run: bash run_test.sh
+  run_pull_on_my_server:
+    name: Run Pull on My Server by ssh
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: install ssh key
+      run: |
+        install -m 600 -D /dev/null ~/.ssh/id_rsa
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+    - name: Connect to server
+      run: ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd ${{ secrets.WORKSPACE }} && git pull"
+
+    - name: clean up
+      run: rm ~/.ssh
+
